@@ -757,7 +757,8 @@ Returns false when it fails, leaving the surface to hrt_layer_shell_surface_abor
   (headless (:struct wl-listener))
   (output-manager (:struct wl-listener))
   (layer-shell (:struct wl-listener))
-  (idle-inhibit-manager (:struct wl-listener)))
+  (idle-inhibit-manager (:struct wl-listener))
+  (decoration-manager (:struct wl-listener)))
 
 (cffi:defcstruct hrt-server
   (wl-display :pointer #| (:struct wl-display) |#)
@@ -781,6 +782,7 @@ Returns false when it fails, leaving the surface to hrt_layer_shell_surface_abor
   (new-xdg-toplevel (:struct wl-listener))
   (layer-shell :pointer #| (:struct wlr-layer-shell-v1) |#)
   (new-layer-shell (:struct wl-listener))
+  (new-toplevel-decoration (:struct wl-listener))
   (ext-image-copy-capture-manager-v1 :pointer #| (:struct wlr-ext-image-copy-capture-manager-v1) |#)
   (idle-notifier :pointer #| (:struct wlr-idle-notifier-v1) |#)
   (idle-inhibit-manager :pointer #| (:struct wlr-idle-inhibit-manager-v1) |#)
