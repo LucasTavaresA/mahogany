@@ -162,6 +162,10 @@ to 1.0 (fastest)."
 
 (cffi:defcstruct hrt-view)
 
+(cffi:defcenum hrt-view-type
+  (:hrt-view-xdg 0)
+  (:hrt-view-xwayland 1))
+
 (cffi:defctype view-destroy-handler :pointer #| function ptr void (struct hrt_view *) |#)
 
 (cffi:defctype view-commit-handler :pointer #| function ptr void (struct hrt_view *) |#)
@@ -195,7 +199,9 @@ to 1.0 (fastest)."
   (request-maximize (:struct wl-listener))
   (request-minimize (:struct wl-listener))
   (request-fullscreen (:struct wl-listener))
-  (callbacks (:pointer (:struct hrt-view-callbacks))))
+  (callbacks (:pointer (:struct hrt-view-callbacks)))
+  (type hrt-view-type)
+  (xwayland-surface :pointer #| (:struct wlr-xwayland-surface) |#))
 
 #-HRT-DEBUG
 (declaim (inline hrt-view-info))

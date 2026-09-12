@@ -10,6 +10,15 @@
 #include "hrt_output.h"
 
 struct hrt_view;
+struct wlr_xwayland_surface;
+
+/**
+ * XDG is 0 so that a calloc'd view is an xdg view.
+ */
+enum hrt_view_type {
+    HRT_VIEW_XDG = 0,
+    HRT_VIEW_XWAYLAND,
+};
 
 typedef void (*view_destroy_handler)(struct hrt_view *view);
 typedef void (*view_commit_handler)(struct hrt_view *view);
@@ -60,6 +69,9 @@ struct hrt_view {
     struct wl_listener request_fullscreen;
 
     const struct hrt_view_callbacks *callbacks;
+
+    enum hrt_view_type type;
+    struct wlr_xwayland_surface *xwayland_surface;
 };
 
 void hrt_view_info(struct hrt_view *view);

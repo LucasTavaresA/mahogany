@@ -6,6 +6,10 @@
 #include "scene_impl.h"
 #include "message_impl.h"
 #include "layer_shell_impl.h"
+#include "hrt/config.h"
+#if HRT_HAS_XWAYLAND
+#include "xwayland_impl.h"
+#endif
 #include <stdlib.h>
 #include <wayland-server-core.h>
 #include <wayland-util.h>
@@ -131,6 +135,12 @@ bool hrt_server_init(
         wlr_log(WLR_ERROR, "Could not initialize the seat");
         return false;
     }
+
+#if HRT_HAS_XWAYLAND
+    if (!hrt_xwayland_init(server)) {
+        return false;
+    }
+#endif
     // Check if this arg was provided so we don't need to specify this for
     // test compositors.
     if (layer_shell_callbacks) {
@@ -185,6 +195,9 @@ void hrt_server_stop(struct hrt_server *server) {
 }
 
 void hrt_server_finish(struct hrt_server *server) {
+#if HRT_HAS_XWAYLAND
+    hrt_xwayland_finish(server);
+#endif
     wl_display_destroy_clients(server->wl_display);
     hrt_message_destroy(server);
     // Some of these "destroy" calls should probably be hooked up to listen to the destroy

@@ -19,6 +19,12 @@ hrt_source_files += files(
   'scene_descriptor.c',
 )
 
+if have_xwayland
+   hrt_source_files += files(
+      'xwayland.c'
+   )
+endif
+
 if get_option('debug_utils')
    hrt_source_files += files(
       'debug/debug.c'

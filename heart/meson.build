@@ -60,6 +60,8 @@ xkbcommon      = dependency(
   ],
 )
 xcb            = dependency('xcb', required: get_option('xwayland'))
+xcb_ewmh       = dependency('xcb-ewmh', required: get_option('xwayland'))
+xcb_icccm      = dependency('xcb-icccm', required: get_option('xwayland'))
 wlroots        = dependency(
   ['wlroots-0.20', 'wlroots'],
   version: wlroots_version,
@@ -86,7 +88,8 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
   error('Cannot enable Xwayland in heart: wlroots has been built without Xwayland support')
 endif
 
-have_xwayland = xcb.found() and wlroots_has_xwayland
+have_xwayland = xcb.found() and xcb_ewmh.found() and xcb_icccm.found() \
+  and wlroots_has_xwayland
 
 # We use eventfd as a semaphore. It's not available everywhere, but is present on
 # Linux, FreeBSD, and NetBSD. Wlroots only supports Linux and FreeBSD, so we are good.
@@ -115,6 +118,10 @@ hrt_deps = [
   wlroots,
   xkbcommon,
 ]
+
+if have_xwayland
+  hrt_deps += [xcb, xcb_ewmh, xcb_icccm]
+endif
 
 hrt_inc = include_directories('include')
 proto_inc = include_directories('protocols')

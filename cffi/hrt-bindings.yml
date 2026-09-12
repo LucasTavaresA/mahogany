@@ -25,6 +25,7 @@ enum-constants:
     match: ".*"
   exclude:
     names:
+    - hrt-view-type
     - window-gravity
     - hrt-border-style
     - hrt-layer-shell-keyboard-interactivity
