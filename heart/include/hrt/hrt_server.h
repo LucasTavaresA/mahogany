@@ -48,6 +48,8 @@ struct hrt_server {
     struct wlr_layer_shell_v1 *layer_shell;
     struct wl_listener new_layer_shell;
 
+    struct wl_listener new_toplevel_decoration;
+
     struct wlr_ext_image_copy_capture_manager_v1
         *ext_image_copy_capture_manager_v1;
 
@@ -56,6 +58,7 @@ struct hrt_server {
         struct wl_listener headless;
         struct wl_listener output_manager;
         struct wl_listener layer_shell;
+        struct wl_listener decoration_manager;
     } destroy_listener;
 
     const struct hrt_output_callbacks *output_callback;

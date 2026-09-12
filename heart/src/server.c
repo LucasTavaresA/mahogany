@@ -20,6 +20,8 @@
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
+#include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_ext_image_copy_capture_v1.h>
 #include <wlr/types/wlr_ext_image_capture_source_v1.h>
@@ -42,6 +44,31 @@ static void handle_auto_backend_destroyed(struct wl_listener *listener,
         wl_container_of(listener, server, destroy_listener.backend);
     wlr_log(WLR_DEBUG, "Backend destroyed");
     wl_list_remove(&listener->link);
+}
+
+static void handle_new_toplevel_decoration(struct wl_listener *listener,
+                                           void *data) {
+    struct wlr_xdg_toplevel_decoration_v1 *decoration = data;
+
+    // Not wlr_xdg_toplevel_decoration_v1_set_mode: that also schedules a
+    // configure, which asserts the surface is initialized, and clients create
+    // the decoration before their first commit. wlroots sends the mode with
+    // the next configure the toplevel gets, which is the one that maps it.
+    decoration->scheduled_mode =
+        WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
+    // Unless the client committed first and is already past that configure.
+    if (decoration->toplevel->base->initialized) {
+        wlr_xdg_surface_schedule_configure(decoration->toplevel->base);
+    }
+}
+
+static void handle_decoration_manager_destroy(struct wl_listener *listener,
+                                              void *data) {
+    struct hrt_server *server =
+        wl_container_of(listener, server, destroy_listener.decoration_manager);
+
+    wl_list_remove(&server->new_toplevel_decoration.link);
+    wl_list_remove(&server->destroy_listener.decoration_manager.link);
 }
 
 static char *prev_wayland_display;
@@ -107,6 +134,27 @@ bool hrt_server_init(
     server->ext_image_copy_capture_manager_v1 =
         wlr_ext_image_copy_capture_manager_v1_create(server->wl_display, 1);
     wlr_ext_output_image_capture_source_manager_v1_create(server->wl_display, 1);
+
+    struct wlr_xdg_decoration_manager_v1 *xdg_decoration =
+        wlr_xdg_decoration_manager_v1_create(server->wl_display);
+    struct wlr_server_decoration_manager *kde_decoration =
+        wlr_server_decoration_manager_create(server->wl_display);
+    if (!xdg_decoration || !kde_decoration) {
+        wlr_log(WLR_ERROR, "Could not initialize the decoration managers");
+        return false;
+    }
+
+    server->new_toplevel_decoration.notify = handle_new_toplevel_decoration;
+    wl_signal_add(&xdg_decoration->events.new_toplevel_decoration,
+                  &server->new_toplevel_decoration);
+    server->destroy_listener.decoration_manager.notify =
+        handle_decoration_manager_destroy;
+    wl_signal_add(&xdg_decoration->events.destroy,
+                  &server->destroy_listener.decoration_manager);
+
+    // The KDE protocol is not per-surface
+    wlr_server_decoration_manager_set_default_mode(
+        kde_decoration, WLR_SERVER_DECORATION_MANAGER_MODE_SERVER);
 
     server->scene         = wlr_scene_create();
     server->output_layout = wlr_output_layout_create(server->wl_display);
